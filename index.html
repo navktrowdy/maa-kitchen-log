@@ -240,6 +240,11 @@ body { margin: 0 }
         if (data.error === 'pin_not_set') { askPin('The owner has not set a PIN yet (it is still 0000 in Apps Script).'); return false }
         throw new Error(data.error);
       }
+      if (!data.checks || Array.isArray(data.lists?.veg?.[0]?.items) === false) {
+        S.data = null; renderCards();
+        banner('<b>The Google Sheet script is an older version.</b> In Apps Script: paste the latest Code.gs, Save, run setup, then Deploy → Manage deployments → pencil → Version: New version → Deploy.');
+        $('loadMsg').textContent = ''; return false;
+      }
       S.data = data; banner(''); $('loadMsg').textContent = '';
       renderCards(); if (!$('vHist').hidden) renderHist();
       return true;
@@ -295,6 +300,9 @@ body { margin: 0 }
   // ---------- form ----------
   const draftKey = () => `kl-draft-${S.date}-${S.check}`;
   function openCheck(k) {
+    try { openCheck_(k) } catch (e) { banner('<b>Something went wrong opening this check.</b> Press Refresh and try again. If it keeps happening, tell the owner: ' + esc(e.message)); console.error(e) }
+  }
+  function openCheck_(k) {
     S.check = k;
     const c = saved(S.date, k);
     let d = null; try { d = JSON.parse(store.get(draftKey()) || 'null') } catch {}
