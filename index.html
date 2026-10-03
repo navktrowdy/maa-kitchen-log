@@ -208,7 +208,11 @@ body { margin: 0 }
     try {
       const res = await fetch(API + '?pin=' + encodeURIComponent(S.pin), { redirect: 'follow' });
       const data = await res.json();
-      if (!data.ok) { if (data.error === 'pin') { askPin('That PIN is not right.'); return false } throw new Error(data.error) }
+      if (!data.ok) {
+        if (data.error === 'pin') { askPin('That PIN is not right.'); return false }
+        if (data.error === 'pin_not_set') { askPin('The owner has not set a PIN yet (it is still 0000 in Apps Script).'); return false }
+        throw new Error(data.error)
+      }
       S.lists = data.lists; S.days = data.days || [];
       showBanner(''); renderAll(); return true;
     } catch (e) {
