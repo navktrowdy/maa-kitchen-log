@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#7d1d0d">
+<title>Maa Madurai Kitchen Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+Tamil:wght@400;500&display=swap">
+<style>
+/* Layout: brand bar + date strip on top, one task per tab (veg check / food balance / history), rows sized for wet thumbs on a kitchen tablet. */
+:root {
+  --bg: #f7f0e4; --surface: #fffaf2; --sunk: #f1e6d4; --ink: #2b130c; --muted: #6e584c; --line: #e3d3bc;
+  --brand: #7d1d0d; --brand-ink: #face0b; --accent: #8f2410; --accent-ink: #fffaf2;
+  --ok: #2c7a47; --ok-bg: #e3f1e6; --warn: #9a6200; --warn-bg: #fbecc8; --bad: #b42318; --bad-bg: #fbe0dc;
+  --focus: #c98a00;
+  --f-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+  --f-body: 'Poppins', -apple-system, 'Segoe UI', sans-serif;
+  --f-tamil: 'Noto Sans Tamil', 'Poppins', sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1b0c08; --surface: #27130d; --sunk: #200f0a; --ink: #f5ede2; --muted: #c4b0a0; --line: #48291e;
+  --brand: #5c150a; --brand-ink: #face0b; --accent: #face0b; --accent-ink: #2b130c;
+  --ok: #7ed39a; --ok-bg: #173323; --warn: #f2c25a; --warn-bg: #3a2a0c; --bad: #ff9a8a; --bad-bg: #44160f;
+  --focus: #face0b; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1b0c08; --surface: #27130d; --sunk: #200f0a; --ink: #f5ede2; --muted: #c4b0a0; --line: #48291e;
+  --brand: #5c150a; --brand-ink: #face0b; --accent: #face0b; --accent-ink: #2b130c;
+  --ok: #7ed39a; --ok-bg: #173323; --warn: #f2c25a; --warn-bg: #3a2a0c; --bad: #ff9a8a; --bad-bg: #44160f;
+  --focus: #face0b; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+header.bar { background: var(--brand); color: var(--brand-ink); padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px; }
+header.bar .in { max-width: 920px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between }
+header.bar h1 { font: 700 1.35rem/1.2 var(--f-display); letter-spacing: .04em; margin: 0 }
+header.bar .sub { color: #f5ede2; opacity: .85; font-size: .85rem }
+[lang="ta"] { font-family: var(--f-tamil) }
+
+.datebar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-block: 14px }
+.datebar input[type=date] { font: 600 1rem var(--f-body); padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink) }
+.btn { font: 600 .95rem var(--f-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 9px 14px; cursor: pointer; min-height: 44px }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.btn:disabled { opacity: .5; cursor: not-allowed }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px }
+
+nav.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 16px; overflow-x: auto }
+nav.tabs button { font: 600 .95rem var(--f-body); background: none; border: 0; color: var(--muted); padding: 10px 14px; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; white-space: nowrap; min-height: 44px }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent) }
+
+.notice { background: var(--sunk); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; color: var(--muted) }
+.notice.warn { background: var(--warn-bg); color: var(--warn); border-color: transparent }
+.notice b { color: var(--ink) }
+
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px }
+.summary > div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0 }
+.summary .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+.summary .v { font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums }
+.summary ul { margin: 4px 0 0; padding-left: 18px }
+
+.list { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden }
+.row { display: grid; grid-template-columns: minmax(130px, 1.3fr) auto auto minmax(120px, auto); gap: 10px 14px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line) }
+.row:first-child { border-top: 0 }
+.row.bal { grid-template-columns: minmax(130px, 1.3fr) auto auto auto }
+.nm { min-width: 0 }
+.nm b { display: block; font-weight: 600 }
+.nm span { color: var(--muted); font-size: .85rem }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--sunk) }
+.seg button { font: 500 .85rem var(--f-body); border: 0; background: none; color: var(--muted); padding: 8px 11px; min-height: 40px; cursor: pointer; border-left: 1px solid var(--line) }
+.seg button:first-child { border-left: 0 }
+.seg button[aria-pressed="true"][data-v="enough"], .seg button[aria-pressed="true"][data-v="good"], .seg button[aria-pressed="true"][data-v="chill"] { background: var(--ok-bg); color: var(--ok); font-weight: 700 }
+.seg button[aria-pressed="true"][data-v="low"], .seg button[aria-pressed="true"][data-v="staff"] { background: var(--warn-bg); color: var(--warn); font-weight: 700 }
+.seg button[aria-pressed="true"][data-v="out"], .seg button[aria-pressed="true"][data-v="poor"], .seg button[aria-pressed="true"][data-v="discard"] { background: var(--bad-bg); color: var(--bad); font-weight: 700 }
+.qty { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .85rem; white-space: nowrap }
+.qty input { width: 76px; font: 600 1rem var(--f-body); font-variant-numeric: tabular-nums; padding: 7px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); text-align: right }
+
+.foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px }
+.foot label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: var(--muted); flex: 1 1 200px; min-width: 0 }
+.foot input, .foot textarea { font: 500 1rem var(--f-body); padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); width: 100% }
+.foot textarea { min-height: 44px; resize: vertical }
+.saved { font-size: .85rem; color: var(--muted) }
+.saved.ok { color: var(--ok) }
+.saved.err { color: var(--bad) }
+
+.hist { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 560px }
+th, td { text-align: left; padding: 10px 12px; border-top: 1px solid var(--line); font-size: .9rem; vertical-align: top }
+th { border-top: 0; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+td a { color: var(--ink); font-weight: 600 }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600 }
+.pill.ok { background: var(--ok-bg); color: var(--ok) } .pill.warn { background: var(--warn-bg); color: var(--warn) } .pill.bad { background: var(--bad-bg); color: var(--bad) }
+.muted { color: var(--muted) }
+.empty { padding: 28px 16px; text-align: center; color: var(--muted) }
+.editor textarea { width: 100%; min-height: 220px; font: 500 .9rem/1.6 ui-monospace, Menlo, Consolas, monospace; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink) }
+.editor h3 { margin: 18px 0 6px; font-size: 1rem }
+.editor p { margin: 0 0 8px; color: var(--muted); font-size: .85rem; max-width: 65ch }
+
+@media (max-width: 680px) {
+  .row, .row.bal { grid-template-columns: 1fr 1fr; }
+  .row .nm { grid-column: 1 / -1 }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+<style>
+html { -webkit-text-size-adjust: 100% }
+[hidden] { display: none !important }
+img { max-width: 100% }
+body { margin: 0 }
+.pinbox { max-width: 360px; margin: 48px auto; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 12px }
+.pinbox h2 { font: 700 1.2rem var(--f-display); margin: 0 }
+.pinbox input { font: 600 1.4rem var(--f-body); letter-spacing: .3em; text-align: center; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink) }
+.top-actions { margin-left: auto; display: flex; gap: 8px }
+@media (max-width: 680px) {
+  .row .seg { display: flex; width: 100% }
+  .row .seg button { flex: 1 1 0; padding-inline: 4px }
+  .row.bal .seg { grid-column: 1 / -1 }
+}
+</style>
+</head>
+<body>
+<header class="bar"><div class="in">
+  <h1>Maa Madurai Kitchen Log</h1>
+  <span class="sub">Shop P34, Portico Plaza · Toongabbie</span>
+</div></header>
+
+<div class="wrap">
+  <form class="pinbox" id="pinForm" hidden>
+    <h2>Staff PIN</h2>
+    <p class="muted" style="margin:0">Type the shop PIN. This device remembers it.</p>
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off" aria-label="Staff PIN" required>
+    <button class="btn primary" type="submit">Open the log</button>
+    <span class="saved err" id="pinMsg"></span>
+  </form>
+
+  <div id="app" hidden>
+    <div class="datebar">
+      <label for="date" class="muted">Day</label>
+      <input type="date" id="date">
+      <button class="btn" id="today" type="button">Today</button>
+      <span class="saved" id="dayStatus"></span>
+      <div class="top-actions"><button class="btn" id="refresh" type="button">Refresh</button></div>
+    </div>
+
+    <div id="banner"></div>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-veg" aria-selected="true" data-tab="veg">Morning veg check</button>
+      <button role="tab" id="tab-bal" aria-selected="false" data-tab="bal">Closing food balance</button>
+      <button role="tab" id="tab-hist" aria-selected="false" data-tab="hist">History</button>
+    </nav>
+
+    <section id="p-veg" role="tabpanel">
+      <div class="summary" id="vegSum"></div>
+      <div class="list" id="vegList"><div class="empty">Loading the veg list…</div></div>
+      <div class="foot">
+        <label for="vegNote">Note for the owner (optional)<textarea id="vegNote" placeholder="e.g. tomatoes soft, used first"></textarea></label>
+        <label for="vegBy">Checked by<input id="vegBy" autocomplete="name" placeholder="Your name"></label>
+        <button class="btn primary" id="vegSave" type="button">Save veg check</button>
+        <span class="saved" id="vegSaved"></span>
+      </div>
+    </section>
+
+    <section id="p-bal" role="tabpanel" hidden>
+      <div class="notice">Food kept for tomorrow must be cooled quickly, covered, labelled with today's date and kept at <b>5°C or below</b>. If in doubt, throw it out.</div>
+      <div class="summary" id="balSum"></div>
+      <div class="list" id="balList"><div class="empty">Loading the dish list…</div></div>
+      <div class="foot">
+        <label for="balNote">Note for the owner (optional)<textarea id="balNote" placeholder="e.g. biryani over-made on a quiet Tuesday"></textarea></label>
+        <label for="balBy">Counted by<input id="balBy" autocomplete="name" placeholder="Your name"></label>
+        <button class="btn primary" id="balSave" type="button">Save food balance</button>
+        <span class="saved" id="balSaved"></span>
+      </div>
+    </section>
+
+    <section id="p-hist" role="tabpanel" hidden>
+      <div class="foot" style="margin: 0 0 12px">
+        <span class="muted">Last 31 days. The full record is in the owner's Google Sheet.</span>
+        <button class="btn" id="csv" type="button">Download CSV</button>
+      </div>
+      <div class="hist" id="histTable"><div class="empty">No days recorded yet. Saved checks appear here.</div></div>
+    </section>
+
+    <p class="muted" style="margin-top:28px;font-size:.8rem"><a href="#" id="forget" style="color:inherit">Forget the PIN on this device</a></p>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+  const API = window.KITCHEN_LOG_API || '';
+  const TZ = 'Australia/Sydney';
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sydDate = (d = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  const sydTime = (iso) => { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? '' : new Intl.DateTimeFormat('en-AU', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(d) };
+  const nice = (ds) => new Date(ds + 'T12:00:00Z').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const store = { get(k) { try { return localStorage.getItem(k) } catch { return null } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} }, del(k) { try { localStorage.removeItem(k) } catch {} } };
+
+  const S = { pin: store.get('kl-pin') || '', lists: null, days: [], date: sydDate(), draft: { veg: {}, bal: {} }, dirty: { veg: false, bal: false }, loading: false };
+  const day = () => S.days.find(d => d.date === S.date) || null;
+
+  // ---------- server ----------
+  async function load() {
+    if (!API) { showBanner('<b>Not set up yet.</b> The owner needs to add the Google Sheet link to config.js.'); return false }
+    S.loading = true;
+    try {
+      const res = await fetch(API + '?pin=' + encodeURIComponent(S.pin), { redirect: 'follow' });
+      const data = await res.json();
+      if (!data.ok) { if (data.error === 'pin') { askPin('That PIN is not right.'); return false } throw new Error(data.error) }
+      S.lists = data.lists; S.days = data.days || [];
+      showBanner(''); renderAll(); return true;
+    } catch (e) {
+      showBanner('<b>Could not reach the log.</b> Check the Wi-Fi, then press Refresh. Anything you type is kept on this device until it saves.');
+      return false;
+    } finally { S.loading = false }
+  }
+  async function post(body) {
+    const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, pin: S.pin }), redirect: 'follow' });
+    return res.json();
+  }
+  function showBanner(html) { $('banner').innerHTML = html ? `<div class="notice warn">${html}</div>` : '' }
+
+  // ---------- PIN ----------
+  function askPin(msg) {
+    S.pin = ''; store.del('kl-pin');
+    $('app').hidden = true; $('pinForm').hidden = false; $('pinMsg').textContent = msg || ''; $('pin').value = ''; $('pin').focus();
+  }
+  $('pinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    S.pin = $('pin').value.trim(); $('pinMsg').textContent = 'Checking…';
+    $('pinForm').hidden = true; $('app').hidden = false;
+    if (await load()) store.set('kl-pin', S.pin);
+  });
+  $('forget').addEventListener('click', (e) => { e.preventDefault(); askPin('') });
+
+  // ---------- tabs ----------
+  document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+  function showTab(t) {
+    document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    for (const p of ['veg', 'bal', 'hist']) $('p-' + p).hidden = p !== t;
+    try { history.replaceState(null, '', '#' + t) } catch {}
+  }
+  if (['veg', 'bal', 'hist'].includes(location.hash.slice(1))) showTab(location.hash.slice(1));
+  else if (+new Intl.DateTimeFormat('en-AU', { timeZone: TZ, hour: 'numeric', hourCycle: 'h23' }).format(new Date()) >= 15) showTab('bal');
+
+  // ---------- date ----------
+  $('date').value = S.date; $('date').max = sydDate(); $('date').min = sydDate(new Date(Date.now() - 30 * 864e5));
+  $('date').addEventListener('change', e => { if (e.target.value) setDate(e.target.value) });
+  $('today').addEventListener('click', () => { $('date').value = sydDate(); setDate(sydDate()) });
+  $('refresh').addEventListener('click', () => load());
+  function setDate(d) { S.date = d; S.dirty = { veg: false, bal: false }; $('vegSaved').textContent = ''; $('balSaved').textContent = ''; renderAll() }
+
+  for (const k of ['vegBy', 'balBy']) {
+    $(k).value = store.get('kl-name') || '';
+    $(k).addEventListener('change', e => { const v = e.target.value.trim(); store.set('kl-name', v); $('vegBy').value = $('balBy').value = v });
+  }
+  $('vegNote').addEventListener('input', () => markDirty('veg'));
+  $('balNote').addEventListener('input', () => markDirty('bal'));
+
+  // Unsaved work survives a lost connection or a closed tab.
+  const draftKey = (sec) => `kl-draft-${S.date}-${sec}`;
+  function markDirty(sec) {
+    S.dirty[sec] = true;
+    store.set(draftKey(sec), JSON.stringify({ items: S.draft[sec], note: $(sec + 'Note').value }));
+  }
+  function loadDraft(sec) {
+    try { const d = JSON.parse(store.get(draftKey(sec)) || 'null'); if (d) { S.draft[sec] = d.items || {}; $(sec + 'Note').value = d.note || ''; S.dirty[sec] = true; return true } } catch {}
+    return false;
+  }
+
+  // ---------- render ----------
+  function renderAll() { renderVeg(); renderBal(); renderHist(); renderStatus() }
+
+  function renderStatus() {
+    const d = day(), bits = [];
+    if (d?.vegAt) bits.push(`Veg checked ${sydTime(d.vegAt)} by ${esc(d.vegBy || '—')}`);
+    if (d?.balAt) bits.push(`Balance counted ${sydTime(d.balAt)} by ${esc(d.balBy || '—')}`);
+    $('dayStatus').innerHTML = (S.date === sydDate() ? 'Today · ' : nice(S.date) + ' · ') + (bits.join(' · ') || 'Nothing saved for this day yet');
+  }
+
+  function seg(field, name, value, opts) {
+    return `<div class="seg" role="group" aria-label="${esc(opts.label)}">` + opts.items.map(([v, t]) =>
+      `<button type="button" data-f="${field}" data-name="${esc(name)}" data-v="${v}" aria-pressed="${value === v}">${t}</button>`).join('') + '</div>';
+  }
+  const fid = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  function renderVeg() {
+    const L = S.lists?.veg;
+    if (!L) { $('vegSum').innerHTML = ''; return }
+    if (!L.length) { $('vegList').innerHTML = '<div class="empty">No veg items set up yet. The owner adds them in the Lists tab of the Google Sheet.</div>'; return }
+    if (!S.dirty.veg && !loadDraft('veg')) { S.draft.veg = structuredClone(day()?.veg || {}); $('vegNote').value = day()?.vegNote || '' }
+    $('vegList').innerHTML = L.map(it => {
+      const r = S.draft.veg[it.name] || {};
+      return `<div class="row">
+        <div class="nm"><b>${esc(it.name)}</b>${it.ta ? `<span lang="ta">${esc(it.ta)}</span>` : ''}</div>
+        ${seg('level', it.name, r.level, { label: 'Stock of ' + it.name, items: [['enough', 'Enough'], ['low', 'Low'], ['out', 'Out']] })}
+        ${seg('quality', it.name, r.quality, { label: 'Quality of ' + it.name, items: [['good', 'Fresh'], ['poor', 'Poor']] })}
+        <label class="qty">Order <input type="number" inputmode="decimal" min="0" step="0.5" id="vo-${fid(it.name)}" data-f="order" data-name="${esc(it.name)}" value="${r.order ?? ''}"> ${esc(it.unit)}</label>
+      </div>`;
+    }).join('');
+    vegSummary();
+  }
+
+  function vegSummary() {
+    const L = S.lists?.veg || [];
+    const g = (it) => S.draft.veg[it.name] || {};
+    const done = L.filter(it => g(it).level).length;
+    const toOrder = L.filter(it => +g(it).order > 0 || ['low', 'out'].includes(g(it).level));
+    const poor = L.filter(it => g(it).quality === 'poor');
+    $('vegSum').innerHTML = `
+      <div><div class="k">Checked</div><div class="v">${done} of ${L.length} items</div></div>
+      <div><div class="k">To order from the veg supplier</div>${toOrder.length ? '<ul>' + toOrder.map(it => {
+        const r = g(it); return `<li>${esc(it.name)} ${+r.order > 0 ? `<b>${r.order} ${esc(it.unit)}</b>` : `<span class="pill ${r.level === 'out' ? 'bad' : 'warn'}">${r.level}</span>`}</li>` }).join('') + '</ul>' : '<div class="v muted">Nothing yet</div>'}</div>
+      <div><div class="k">Poor quality</div>${poor.length ? '<ul>' + poor.map(it => `<li>${esc(it.name)}</li>`).join('') + '</ul>' : '<div class="v muted">None</div>'}</div>`;
+  }
+
+  function renderBal() {
+    const L = S.lists?.dishes;
+    if (!L) { $('balSum').innerHTML = ''; return }
+    if (!L.length) { $('balList').innerHTML = '<div class="empty">No dishes set up yet. The owner adds them in the Lists tab of the Google Sheet.</div>'; return }
+    if (!S.dirty.bal && !loadDraft('bal')) { S.draft.bal = structuredClone(day()?.bal || {}); $('balNote').value = day()?.balNote || '' }
+    $('balList').innerHTML = L.map(it => {
+      const r = S.draft.bal[it.name] || {};
+      return `<div class="row bal">
+        <div class="nm"><b>${esc(it.name)}</b><span>${esc(it.unit)}</span></div>
+        <label class="qty">Made <input type="number" inputmode="decimal" min="0" step="0.5" id="bm-${fid(it.name)}" data-f="made" data-name="${esc(it.name)}" value="${r.made ?? ''}"></label>
+        <label class="qty">Left <input type="number" inputmode="decimal" min="0" step="0.5" id="bl-${fid(it.name)}" data-f="left" data-name="${esc(it.name)}" value="${r.left ?? ''}"></label>
+        ${seg('action', it.name, r.action, { label: 'What happened to leftover ' + it.name, items: [['chill', 'Chilled'], ['staff', 'Staff meal'], ['discard', 'Thrown out']] })}
+      </div>`;
+    }).join('');
+    balSummary();
+  }
+
+  function balSummary() {
+    const rows = (S.lists?.dishes || []).map(it => ({ it, r: S.draft.bal[it.name] || {} }));
+    const counted = rows.filter(x => x.r.left !== undefined && x.r.left !== null && x.r.left !== '').length;
+    const thrown = rows.filter(x => x.r.action === 'discard' && +x.r.left > 0);
+    const kept = rows.filter(x => x.r.action === 'chill' && +x.r.left > 0);
+    const missing = rows.filter(x => +x.r.left > 0 && !x.r.action);
+    $('balSum').innerHTML = `
+      <div><div class="k">Counted</div><div class="v">${counted} of ${rows.length} dishes</div>${missing.length ? `<div class="pill warn">${missing.length} leftover without an action</div>` : ''}</div>
+      <div><div class="k">Thrown out</div>${thrown.length ? '<ul>' + thrown.map(x => `<li>${esc(x.it.name)} <b>${x.r.left} ${esc(x.it.unit)}</b>${+x.r.made > 0 ? ` <span class="muted">(${Math.round(100 * x.r.left / x.r.made)}% of made)</span>` : ''}</li>`).join('') + '</ul>' : '<div class="v muted">None</div>'}</div>
+      <div><div class="k">Chilled for tomorrow</div>${kept.length ? '<ul>' + kept.map(x => `<li>${esc(x.it.name)} <b>${x.r.left} ${esc(x.it.unit)}</b></li>`).join('') + '</ul>' : '<div class="v muted">None</div>'}</div>`;
+  }
+
+  function renderHist() {
+    const H = S.days;
+    $('csv').hidden = !H.length;
+    if (!H.length) { $('histTable').innerHTML = '<div class="empty">No days recorded yet. Saved checks appear here.</div>'; return }
+    const unit = (name) => S.lists?.dishes?.find(d => d.name === name)?.unit || '';
+    $('histTable').innerHTML = `<table><thead><tr><th>Day</th><th>Veg check</th><th>Low or out</th><th>Food balance</th><th>Thrown out</th></tr></thead><tbody>` +
+      H.map(d => {
+        const lowOut = Object.entries(d.veg || {}).filter(([, r]) => ['low', 'out'].includes(r?.level)).map(([n]) => esc(n));
+        const thrown = Object.entries(d.bal || {}).filter(([, r]) => r?.action === 'discard' && +r.left > 0).map(([n, r]) => `${esc(n)} ${r.left} ${esc(unit(n))}`);
+        return `<tr><td><a href="#veg" data-day="${esc(d.date)}">${nice(d.date)}</a></td>
+          <td>${d.vegAt ? `<span class="pill ok">Done</span> <span class="muted">${esc(d.vegBy || '')}</span>` : '<span class="pill bad">Missing</span>'}</td>
+          <td>${lowOut.join(', ') || '<span class="muted">—</span>'}</td>
+          <td>${d.balAt ? `<span class="pill ok">Done</span> <span class="muted">${esc(d.balBy || '')}</span>` : '<span class="pill bad">Missing</span>'}</td>
+          <td>${thrown.join(', ') || '<span class="muted">—</span>'}</td></tr>`;
+      }).join('') + '</tbody></table>';
+    $('histTable').querySelectorAll('a[data-day]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); $('date').value = a.dataset.day; setDate(a.dataset.day); showTab('veg') }));
+  }
+
+  // ---------- inputs ----------
+  function onSeg(e) {
+    const b = e.target.closest('.seg button'); if (!b) return;
+    const sec = b.closest('#vegList') ? 'veg' : 'bal';
+    const r = S.draft[sec][b.dataset.name] = { ...(S.draft[sec][b.dataset.name] || {}) };
+    r[b.dataset.f] = r[b.dataset.f] === b.dataset.v ? null : b.dataset.v;
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === r[b.dataset.f])));
+    markDirty(sec); sec === 'veg' ? vegSummary() : balSummary();
+  }
+  function onNum(e) {
+    const i = e.target; if (!i.matches('input[data-f]')) return;
+    const sec = i.closest('#vegList') ? 'veg' : 'bal';
+    const r = S.draft[sec][i.dataset.name] = { ...(S.draft[sec][i.dataset.name] || {}) };
+    r[i.dataset.f] = i.value === '' ? null : Math.max(0, +i.value);
+    markDirty(sec); sec === 'veg' ? vegSummary() : balSummary();
+  }
+  for (const id of ['vegList', 'balList']) { $(id).addEventListener('click', onSeg); $(id).addEventListener('input', onNum) }
+
+  // ---------- save ----------
+  async function save(sec) {
+    const msg = $(sec + 'Saved'), by = $(sec + 'By').value.trim();
+    if (!by) { msg.className = 'saved err'; msg.textContent = 'Type your name first.'; $(sec + 'By').focus(); return }
+    store.set('kl-name', by);
+    const items = {};
+    for (const [name, r] of Object.entries(S.draft[sec])) if (r && Object.values(r).some(v => v !== null && v !== undefined && v !== '')) items[name] = r;
+    const btn = $(sec + 'Save'); btn.disabled = true; msg.className = 'saved'; msg.textContent = 'Saving…';
+    try {
+      const r = await post({ section: sec, date: S.date, by, note: $(sec + 'Note').value.trim(), items });
+      if (!r.ok) {
+        if (r.error === 'pin') return askPin('The PIN has changed. Type the new one, then save again.');
+        throw new Error(r.error);
+      }
+      store.del(draftKey(sec)); S.dirty[sec] = false;
+      msg.className = 'saved ok'; msg.textContent = `Saved ${r.saved} ${sec === 'veg' ? 'items' : 'dishes'} at ${sydTime(r.at)}`;
+      await load();
+    } catch (e) {
+      msg.className = 'saved err'; msg.textContent = 'Not saved. Check the Wi-Fi and press Save again. Your entries are kept on this device.';
+    } finally { btn.disabled = false }
+  }
+  $('vegSave').addEventListener('click', () => save('veg'));
+  $('balSave').addEventListener('click', () => save('bal'));
+
+  // ---------- CSV ----------
+  $('csv').addEventListener('click', () => {
+    const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const vu = (n) => S.lists?.veg?.find(v => v.name === n)?.unit || '';
+    const du = (n) => S.lists?.dishes?.find(v => v.name === n)?.unit || '';
+    const lines = ['date,section,item,stock,quality,order,made,left,unit,leftover,by,saved_at'];
+    for (const d of [...S.days].reverse()) {
+      for (const [n, r] of Object.entries(d.veg || {})) lines.push([d.date, 'veg', q(n), r.level || '', r.quality || '', r.order ?? '', '', '', q(vu(n)), '', q(d.vegBy), d.vegAt || ''].join(','));
+      for (const [n, r] of Object.entries(d.bal || {})) lines.push([d.date, 'balance', q(n), '', '', '', r.made ?? '', r.left ?? '', q(du(n)), r.action || '', q(d.balBy), d.balAt || ''].join(','));
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([lines.join('\n') + '\n'], { type: 'text/csv' }));
+    a.download = `kitchen-log-${S.days.at(-1)?.date}-to-${S.days[0]?.date}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+
+  // Keep the screen current when nobody is typing.
+  setInterval(() => { if (!document.hidden && S.pin && !S.loading && !S.dirty.veg && !S.dirty.bal) load() }, 60000);
+
+  if (S.pin) { $('app').hidden = false; load() } else askPin('');
+})();
+</script>
+</body>
+</html>
